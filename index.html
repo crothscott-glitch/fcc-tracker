@@ -1,0 +1,3190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCC Elite Player Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #FF6B6B;
+            --primary-light: #FF8585;
+            --primary-dark: #E85555;
+            --accent: #FF5252;
+            --accent-dark: #E84545;
+            --coral-bg: #FFF5F5;
+            --text: #1a1a1a;
+            --text-light: #666;
+            --bg: #FFF9F9;
+            --card: #ffffff;
+            --border: #FFD1D1;
+            --shadow: rgba(255, 107, 107, 0.15);
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding-bottom: 80px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 1.5rem 1rem;
+            box-shadow: 0 4px 12px var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            margin-bottom: 0.25rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        .gdrive-status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--warning);
+            animation: pulse 2s infinite;
+        }
+
+        .status-indicator.connected {
+            background: var(--success);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .gdrive-btn {
+            background: white;
+            color: var(--primary);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s ease;
+            margin-left: 0.5rem;
+        }
+
+        .gdrive-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+            background: var(--card);
+            padding: 0.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 0.75rem 1rem;
+            background: transparent;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .nav-tab:hover {
+            background: var(--coral-bg);
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .view {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .card h2 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+
+        .sync-banner {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            animation: slideDown 0.5s ease;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .sync-banner.syncing {
+            background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .btn-secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            border-color: var(--primary);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .player-list {
+            display: grid;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--coral-bg);
+            border-radius: 8px;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .player-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .player-info h3 {
+            font-family: 'Bebas Neue', cursive;
+            color: var(--primary);
+            font-size: 1.25rem;
+            letter-spacing: 1px;
+        }
+
+        .player-info p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .player-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--bg);
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .close-modal:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .rating-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .rating-section h3 {
+            font-family: 'Bebas Neue', cursive;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            font-size: 1.25rem;
+            letter-spacing: 1px;
+        }
+
+        .rating-scale {
+            background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .rating-scale h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            color: var(--primary);
+        }
+
+        .rating-scale ul {
+            list-style: none;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .rating-scale li {
+            padding: 0.25rem 0;
+        }
+
+        .rating-scale strong {
+            color: var(--primary-dark);
+        }
+
+        .evaluation-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(to right, #fafafa 0%, white 100%);
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .evaluation-section h3 {
+            font-family: 'Bebas Neue', cursive;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+        }
+
+        .skill-item {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .skill-header {
+            margin-bottom: 0.5rem;
+        }
+
+        .skill-name {
+            font-weight: 700;
+            color: var(--text);
+            font-size: 1rem;
+        }
+
+        .skill-description {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 0.75rem;
+            font-style: italic;
+        }
+
+        .rating-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--bg);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+
+        .rating-label {
+            font-weight: 500;
+        }
+
+        .notes-area {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px dashed var(--border);
+        }
+
+        .notes-area textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+        }
+
+        .notes-area textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid var(--border);
+        }
+
+        .multi-player-tracking {
+            display: none;
+        }
+
+        .multi-player-tracking.active {
+            display: block;
+        }
+
+        .tracking-mode-selector {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            background: var(--card);
+            padding: 1rem;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 0.75rem;
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .player-tracking-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .player-tracking-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 2px solid var(--border);
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .player-tracking-card h4 {
+            font-family: 'Bebas Neue', cursive;
+            color: var(--primary);
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .quick-stat {
+            background: var(--coral-bg);
+            padding: 0.5rem;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .quick-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            margin-bottom: 0.25rem;
+        }
+
+        .quick-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .quick-tallies {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .quick-tally {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg);
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .quick-tally-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quick-tally-btn {
+            width: 28px;
+            height: 28px;
+            border: 1px solid var(--primary);
+            background: white;
+            color: var(--primary);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .quick-tally-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .quick-tally-value {
+            font-weight: 700;
+            min-width: 30px;
+            text-align: center;
+            color: var(--primary);
+        }
+
+        .save-all-btn {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .evaluation-history {
+            margin-top: 1.5rem;
+        }
+
+        .evaluation-history h3 {
+            font-family: 'Bebas Neue', cursive;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            letter-spacing: 1px;
+        }
+
+        .eval-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--coral-bg);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .eval-history-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .eval-history-info h4 {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .eval-history-info p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .eval-history-score {
+            text-align: right;
+            margin-right: 1rem;
+        }
+
+        .eval-history-score .score {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .eval-history-score .label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .btn-delete-eval {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .team-selector {
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .team-selector label {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .team-selector select {
+            flex: 1;
+            min-width: 200px;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: white;
+        }
+
+        .team-selector select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn-manage-teams {
+            padding: 0.75rem 1.5rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-manage-teams:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .team-management-section {
+            background: var(--coral-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            border: 2px solid var(--border);
+        }
+
+        .team-list {
+            display: grid;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .team-list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid var(--border);
+        }
+
+        .team-list-item.active {
+            border-color: var(--primary);
+            background: var(--coral-bg);
+        }
+
+        .team-list-info h4 {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .team-list-info p {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .team-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: var(--primary);
+            color: white;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .rating-buttons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .rating-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .rating-btn:hover {
+            transform: scale(1.1);
+            border-color: var(--primary);
+        }
+
+        .rating-btn.selected {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tally-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .tally-card {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            padding: 1rem;
+            border-radius: 8px;
+            color: white;
+            text-align: center;
+        }
+
+        .tally-card h4 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .tally-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .tally-btn {
+            width: 36px;
+            height: 36px;
+            border: 2px solid white;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .tally-btn:hover {
+            background: white;
+            color: var(--primary);
+        }
+
+        .tally-value {
+            font-size: 2rem;
+            font-weight: 700;
+            min-width: 50px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .progress-chart {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+        }
+
+        .progress-chart h3 {
+            font-family: 'Bebas Neue', cursive;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            letter-spacing: 1px;
+        }
+
+        .chart-bars {
+            display: flex;
+            gap: 1rem;
+            height: 200px;
+            align-items: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(to top, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 8px 8px 0 0;
+            min-height: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .chart-bar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .chart-bar-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .chart-legend {
+            text-align: center;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        .event-list {
+            display: grid;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .event-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--coral-bg);
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+        }
+
+        .event-info h4 {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .event-info p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .event-stats {
+            text-align: right;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .eval-totals {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 2px solid var(--border);
+        }
+
+        .eval-totals.visible {
+            display: grid;
+        }
+
+        .eval-total-card {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary) 100%);
+            padding: 1.25rem;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+        }
+
+        .eval-total-card h4 {
+            font-family: 'Bebas Neue', cursive;
+            font-size: 1rem;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .eval-total-card .average {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .export-section {
+            background: var(--coral-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            border: 2px solid var(--border);
+        }
+
+        .export-section h3 {
+            font-family: 'Bebas Neue', cursive;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            letter-spacing: 1px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .nav-tab {
+                min-width: 100px;
+                font-size: 0.85rem;
+                padding: 0.625rem 0.75rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid, .tally-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .gdrive-status {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.75rem;
+            }
+
+            .gdrive-btn {
+                font-size: 0.75rem;
+                padding: 0.4rem 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div>
+                <h1>⚽ FCC ELITE PLAYER TRACKER</h1>
+                <p>Professional player development & analytics platform</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                <div class="gdrive-status">
+                    <div class="status-indicator" id="gdriveIndicator"></div>
+                    <span id="gdriveStatusText">Not Connected</span>
+                </div>
+                <button class="gdrive-btn" id="gdriveAuthBtn" onclick="toggleGoogleDrive()">
+                    Connect Google Drive
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="team-selector">
+            <label>⚽ Current Team:</label>
+            <select id="team-select" onchange="switchTeam()">
+                <option value="">Select Team</option>
+            </select>
+            <button class="btn-manage-teams" onclick="switchView('teams'); document.querySelector('.nav-tab').classList.remove('active');">
+                ⚙️ Manage Teams
+            </button>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchView('players')">👥 Players</button>
+            <button class="nav-tab" onclick="switchView('evaluate')">📊 Evaluate</button>
+            <button class="nav-tab" onclick="switchView('stats')">⚡ Stats</button>
+            <button class="nav-tab" onclick="switchView('progress')">📈 Progress</button>
+            <button class="nav-tab" onclick="switchView('export')">💾 Export</button>
+        </div>
+
+        <div id="syncBanner" style="display: none;"></div>
+
+        <!-- Teams View -->
+        <div id="teams-view" class="view">
+            <div class="card">
+                <h2>Create New Team</h2>
+                <form id="add-team-form" onsubmit="addTeam(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Team Name *</label>
+                            <input type="text" id="team-name" placeholder="e.g., U12 Boys Elite, Red Devils, etc." required>
+                        </div>
+                        <div class="form-group">
+                            <label>Age Group *</label>
+                            <select id="team-age" required>
+                                <option value="">Select Age Group</option>
+                                <option value="U6">U6</option>
+                                <option value="U7">U7</option>
+                                <option value="U8">U8</option>
+                                <option value="U9">U9</option>
+                                <option value="U10">U10</option>
+                                <option value="U11">U11</option>
+                                <option value="U12">U12</option>
+                                <option value="U13">U13</option>
+                                <option value="U14">U14</option>
+                                <option value="U15">U15</option>
+                                <option value="U16">U16</option>
+                                <option value="U17">U17</option>
+                                <option value="U18">U18</option>
+                                <option value="Mixed">Mixed Ages</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Coach Name (Optional)</label>
+                        <input type="text" id="team-coach" placeholder="Your name">
+                    </div>
+                    <button type="submit" class="btn btn-primary">➕ Create Team</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Your Teams</h2>
+                <div id="team-list" class="team-list"></div>
+            </div>
+        </div>
+
+        <!-- Players View -->
+        <div id="players-view" class="view active">
+            <div class="card">
+                <h2>Add New Player</h2>
+                <form id="add-player-form" onsubmit="addPlayer(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Player Name *</label>
+                            <input type="text" id="player-name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Primary Position *</label>
+                            <select id="player-position" required>
+                                <option value="">Select Position</option>
+                                <option value="Goalkeeper">Goalkeeper</option>
+                                <option value="Defender">Defender</option>
+                                <option value="Midfielder">Midfielder</option>
+                                <option value="Forward">Forward</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Secondary Position (Optional)</label>
+                            <select id="player-position-secondary">
+                                <option value="">None</option>
+                                <option value="Goalkeeper">Goalkeeper</option>
+                                <option value="Defender">Defender</option>
+                                <option value="Midfielder">Midfielder</option>
+                                <option value="Forward">Forward</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Age Group *</label>
+                            <select id="player-age" required>
+                                <option value="">Select Age Group</option>
+                                <option value="U6">U6</option>
+                                <option value="U7">U7</option>
+                                <option value="U8">U8</option>
+                                <option value="U9">U9</option>
+                                <option value="U10">U10</option>
+                                <option value="U11">U11</option>
+                                <option value="U12">U12</option>
+                                <option value="U13">U13</option>
+                                <option value="U14">U14</option>
+                                <option value="U15">U15</option>
+                                <option value="U16">U16</option>
+                                <option value="U17">U17</option>
+                                <option value="U18">U18</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary">➕ Add Player</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Player Roster</h2>
+                <div id="player-list" class="player-list"></div>
+            </div>
+        </div>
+
+        <!-- Evaluate View -->
+        <div id="evaluate-view" class="view">
+            <div class="card">
+                <h2>Player Evaluation</h2>
+                <div class="form-group">
+                    <label>Select Player *</label>
+                    <select id="eval-player" onchange="loadPlayerEvaluation()">
+                        <option value="">Choose a player</option>
+                    </select>
+                </div>
+                <div id="evaluation-content"></div>
+            </div>
+        </div>
+
+        <!-- Stats View -->
+        <div id="stats-view" class="view">
+            <div class="tracking-mode-selector">
+                <button class="mode-btn active" onclick="switchTrackingMode('single')">
+                    👤 Single Player
+                </button>
+                <button class="mode-btn" onclick="switchTrackingMode('multi')">
+                    👥 Track Whole Team
+                </button>
+            </div>
+
+            <!-- Single Player Tracking (Original) -->
+            <div id="single-player-tracking" class="single-player-tracking">
+                <div class="card">
+                    <h2>Record Performance</h2>
+                    <form id="stats-form" onsubmit="addStats(event)">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Player *</label>
+                                <select id="stats-player" required>
+                                    <option value="">Select Player</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Type *</label>
+                                <select id="stats-type" required>
+                                    <option value="">Select Type</option>
+                                    <option value="game">Game</option>
+                                    <option value="practice">Practice</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Date *</label>
+                                <input type="date" id="stats-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Opponent (if game)</label>
+                                <input type="text" id="stats-opponent">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Goals</label>
+                                <input type="number" id="stats-goals" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Assists</label>
+                                <input type="number" id="stats-assists" min="0" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label>Minutes Played</label>
+                                <input type="number" id="stats-minutes" min="0" value="0">
+                            </div>
+                        </div>
+
+                        <h3 style="margin: 1.5rem 0 1rem; color: var(--primary); font-family: 'Bebas Neue', cursive;">Tally Events</h3>
+                        <div class="tally-grid">
+                            <div class="tally-card">
+                                <h4>Completed Pass</h4>
+                                <div class="tally-controls">
+                                    <button type="button" class="tally-btn" onclick="updateTally('completedPass', -1)">−</button>
+                                    <div class="tally-value" id="tally-completedPass">0</div>
+                                    <button type="button" class="tally-btn" onclick="updateTally('completedPass', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="tally-card">
+                                <h4>Missed Pass</h4>
+                                <div class="tally-controls">
+                                    <button type="button" class="tally-btn" onclick="updateTally('missedPass', -1)">−</button>
+                                    <div class="tally-value" id="tally-missedPass">0</div>
+                                    <button type="button" class="tally-btn" onclick="updateTally('missedPass', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="tally-card">
+                                <h4>Defensive Intervention</h4>
+                                <div class="tally-controls">
+                                    <button type="button" class="tally-btn" onclick="updateTally('defensiveIntervention', -1)">−</button>
+                                    <div class="tally-value" id="tally-defensiveIntervention">0</div>
+                                    <button type="button" class="tally-btn" onclick="updateTally('defensiveIntervention', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="tally-card">
+                                <h4>Progressive Move</h4>
+                                <div class="tally-controls">
+                                    <button type="button" class="tally-btn" onclick="updateTally('progressiveMove', -1)">−</button>
+                                    <div class="tally-value" id="tally-progressiveMove">0</div>
+                                    <button type="button" class="tally-btn" onclick="updateTally('progressiveMove', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="tally-card">
+                                <h4>Lost Possession</h4>
+                                <div class="tally-controls">
+                                    <button type="button" class="tally-btn" onclick="updateTally('lostPossession', -1)">−</button>
+                                    <div class="tally-value" id="tally-lostPossession">0</div>
+                                    <button type="button" class="tally-btn" onclick="updateTally('lostPossession', 1)">+</button>
+                                </div>
+                            </div>
+                            <div class="tally-card">
+                                <h4>Chance Created</h4>
+                                <div class="tally-controls">
+                                    <button type="button" class="tally-btn" onclick="updateTally('chanceCreated', -1)">−</button>
+                                    <div class="tally-value" id="tally-chanceCreated">0</div>
+                                    <button type="button" class="tally-btn" onclick="updateTally('chanceCreated', 1)">+</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 1.5rem;">
+                            <label>Notes</label>
+                            <textarea id="stats-notes" rows="3" placeholder="Additional observations..."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">💾 Save Performance Data</button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h2>Recent Events</h2>
+                    <div id="recent-stats" class="event-list"></div>
+                </div>
+            </div>
+
+            <!-- Multi-Player Tracking (New) -->
+            <div id="multi-player-tracking" class="multi-player-tracking">
+                <div class="card">
+                    <h2>Track Whole Team</h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Type *</label>
+                            <select id="multi-stats-type" required>
+                                <option value="">Select Type</option>
+                                <option value="game">Game</option>
+                                <option value="practice">Practice</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Date *</label>
+                            <input type="date" id="multi-stats-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Opponent (if game)</label>
+                            <input type="text" id="multi-stats-opponent">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="multi-player-grid" class="player-tracking-grid"></div>
+
+                <button class="btn btn-primary save-all-btn" onclick="saveAllPlayerStats()">
+                    💾 Save All Player Data
+                </button>
+            </div>
+        </div>
+
+        <!-- Progress View -->
+        <div id="progress-view" class="view">
+            <div class="card">
+                <h2>Player Progress</h2>
+                <div class="form-group">
+                    <label>Select Player</label>
+                    <select id="progress-player" onchange="renderProgress()">
+                        <option value="">Choose a player</option>
+                    </select>
+                </div>
+                <div id="progress-content"></div>
+            </div>
+        </div>
+
+        <!-- Export View -->
+        <div id="export-view" class="view">
+            <div class="export-section">
+                <h3>📦 Export All Data</h3>
+                <p style="margin-bottom: 1rem; color: var(--text-light);">Download complete backup of all players, evaluations, and stats</p>
+                <div class="export-buttons">
+                    <button class="btn btn-primary" onclick="exportAllData('json')">📄 Export as JSON</button>
+                    <button class="btn btn-secondary" onclick="exportAllData('csv')">📊 Export as CSV</button>
+                </div>
+            </div>
+
+            <div class="export-section">
+                <h3>👤 Export Player Data</h3>
+                <div class="form-group">
+                    <label>Select Player</label>
+                    <select id="export-player">
+                        <option value="">Choose a player</option>
+                    </select>
+                </div>
+                <div class="export-buttons">
+                    <button class="btn btn-primary" onclick="exportPlayerData('json')">📄 Player JSON</button>
+                    <button class="btn btn-secondary" onclick="exportPlayerData('csv')">📊 Player CSV</button>
+                    <button class="btn btn-secondary" onclick="exportPlayerReport()">📋 Full Report</button>
+                </div>
+            </div>
+
+            <div class="export-section">
+                <h3>📥 Import Data</h3>
+                <p style="margin-bottom: 1rem; color: var(--text-light);">Restore data from a JSON backup file</p>
+                <div class="form-group">
+                    <input type="file" id="import-file" accept=".json">
+                </div>
+                <button class="btn btn-primary" onclick="importData()">⬆️ Import JSON File</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evaluation Modal -->
+    <div id="eval-modal" class="modal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeEvaluationModal()">×</button>
+            <h2 style="font-family: 'Bebas Neue', cursive; color: var(--primary); margin-bottom: 1.5rem; letter-spacing: 1px;">Player Evaluation</h2>
+            <div id="eval-form-content"></div>
+        </div>
+    </div>
+
+    <!-- Edit Player Modal -->
+    <div id="edit-player-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="close-modal" onclick="closeEditPlayerModal()">×</button>
+            <h2 style="font-family: 'Bebas Neue', cursive; color: var(--primary); margin-bottom: 1.5rem; letter-spacing: 1px;">Edit Player</h2>
+            <form id="edit-player-form" onsubmit="savePlayerEdit(event)">
+                <div class="form-group">
+                    <label>Player Name *</label>
+                    <input type="text" id="edit-player-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Primary Position *</label>
+                    <select id="edit-player-position" required>
+                        <option value="">Select Position</option>
+                        <option value="Goalkeeper">Goalkeeper</option>
+                        <option value="Defender">Defender</option>
+                        <option value="Midfielder">Midfielder</option>
+                        <option value="Forward">Forward</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Secondary Position (Optional)</label>
+                    <select id="edit-player-position-secondary">
+                        <option value="">None</option>
+                        <option value="Goalkeeper">Goalkeeper</option>
+                        <option value="Defender">Defender</option>
+                        <option value="Midfielder">Midfielder</option>
+                        <option value="Forward">Forward</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Age Group *</label>
+                    <select id="edit-player-age" required>
+                        <option value="">Select Age Group</option>
+                        <option value="U6">U6</option>
+                        <option value="U7">U7</option>
+                        <option value="U8">U8</option>
+                        <option value="U9">U9</option>
+                        <option value="U10">U10</option>
+                        <option value="U11">U11</option>
+                        <option value="U12">U12</option>
+                        <option value="U13">U13</option>
+                        <option value="U14">U14</option>
+                        <option value="U15">U15</option>
+                        <option value="U16">U16</option>
+                        <option value="U17">U17</option>
+                        <option value="U18">U18</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                    <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditPlayerModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Google Drive API -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <script>
+        // Google Drive Configuration
+        const GOOGLE_CLIENT_ID = '322604697481-l7vo12bhrsmlq5oilg5fjnbrmnsp2lmj.apps.googleusercontent.com';
+        const GOOGLE_API_KEY = 'AIzaSyCgTbwH530Vn6ZXa2PAgKnaZheQlfQH0zQ';
+        const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+        const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+        
+        let tokenClient;
+        let gapiInited = false;
+        let gisInited = false;
+        let isGDriveConnected = false;
+        let gdriveFileId = null;
+
+        // Initialize Google API
+        function gapiLoaded() {
+            gapi.load('client', initializeGapiClient);
+        }
+
+        async function initializeGapiClient() {
+            await gapi.client.init({
+                apiKey: GOOGLE_API_KEY,
+                discoveryDocs: [DISCOVERY_DOC],
+            });
+            gapiInited = true;
+            maybeEnableButtons();
+        }
+
+        function gisLoaded() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: GOOGLE_CLIENT_ID,
+                scope: SCOPES,
+                callback: '', // defined later
+            });
+            gisInited = true;
+            maybeEnableButtons();
+        }
+
+        function maybeEnableButtons() {
+            if (gapiInited && gisInited) {
+                document.getElementById('gdriveAuthBtn').disabled = false;
+                // Try to auto-reconnect if token exists
+                checkExistingAuth();
+            }
+        }
+
+        // Check if user was previously authenticated
+        async function checkExistingAuth() {
+            // Check if there's a stored connection preference
+            const wasConnected = localStorage.getItem('gdriveConnected') === 'true';
+            
+            if (wasConnected) {
+                // Try to use existing token
+                try {
+                    tokenClient.callback = async (resp) => {
+                        if (resp.error !== undefined) {
+                            console.log('Token refresh failed, needs re-auth');
+                            localStorage.setItem('gdriveConnected', 'false');
+                            return;
+                        }
+                        isGDriveConnected = true;
+                        localStorage.setItem('gdriveConnected', 'true');
+                        updateGDriveStatus(true);
+                        await loadFromGoogleDrive();
+                        showSyncBanner('✅ Reconnected to Google Drive!', 'success');
+                    };
+
+                    // Request token silently (no popup if user already authorized)
+                    tokenClient.requestAccessToken({prompt: ''});
+                } catch (error) {
+                    console.log('Auto-reconnect failed:', error);
+                    localStorage.setItem('gdriveConnected', 'false');
+                }
+            }
+        }
+
+        // Toggle Google Drive connection
+        function toggleGoogleDrive() {
+            if (isGDriveConnected) {
+                disconnectGoogleDrive();
+            } else {
+                connectGoogleDrive();
+            }
+        }
+
+        function connectGoogleDrive() {
+            tokenClient.callback = async (resp) => {
+                if (resp.error !== undefined) {
+                    throw (resp);
+                }
+                isGDriveConnected = true;
+                localStorage.setItem('gdriveConnected', 'true');
+                updateGDriveStatus(true);
+                await loadFromGoogleDrive();
+                showSyncBanner('✅ Connected to Google Drive!', 'success');
+            };
+
+            if (gapi.client.getToken() === null) {
+                tokenClient.requestAccessToken({prompt: 'consent'});
+            } else {
+                tokenClient.requestAccessToken({prompt: ''});
+            }
+        }
+
+        function disconnectGoogleDrive() {
+            const token = gapi.client.getToken();
+            if (token !== null) {
+                google.accounts.oauth2.revoke(token.access_token);
+                gapi.client.setToken('');
+            }
+            isGDriveConnected = false;
+            gdriveFileId = null;
+            localStorage.setItem('gdriveConnected', 'false');
+            updateGDriveStatus(false);
+            showSyncBanner('Disconnected from Google Drive', 'warning');
+        }
+
+        function updateGDriveStatus(connected) {
+            const indicator = document.getElementById('gdriveIndicator');
+            const statusText = document.getElementById('gdriveStatusText');
+            const btn = document.getElementById('gdriveAuthBtn');
+
+            if (connected) {
+                indicator.classList.add('connected');
+                statusText.textContent = 'Connected';
+                btn.textContent = 'Disconnect';
+                btn.style.background = '#dc3545';
+            } else {
+                indicator.classList.remove('connected');
+                statusText.textContent = 'Not Connected';
+                btn.textContent = 'Connect Google Drive';
+                btn.style.background = 'white';
+            }
+        }
+
+        // Save to Google Drive
+        async function saveToGoogleDrive() {
+            if (!isGDriveConnected) return;
+
+            showSyncBanner('☁️ Syncing to Google Drive...', 'syncing');
+
+            // Collect all team data
+            const allTeamData = {};
+            teams.forEach(team => {
+                const teamPlayers = JSON.parse(localStorage.getItem(`team_${team.id}_players`)) || [];
+                const teamEvals = JSON.parse(localStorage.getItem(`team_${team.id}_evaluations`)) || [];
+                const teamStats = JSON.parse(localStorage.getItem(`team_${team.id}_stats`)) || [];
+                
+                allTeamData[`team_${team.id}`] = {
+                    players: teamPlayers,
+                    evaluations: teamEvals,
+                    stats: teamStats
+                };
+            });
+
+            const data = {
+                teams: teams,
+                currentTeamId: currentTeamId,
+                teamData: allTeamData,
+                lastSynced: new Date().toISOString()
+            };
+
+            const content = JSON.stringify(data, null, 2);
+            const file = new Blob([content], { type: 'application/json' });
+            const metadata = {
+                name: 'fcc-elite-tracker-data.json',
+                mimeType: 'application/json',
+            };
+
+            try {
+                const form = new FormData();
+                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                form.append('file', file);
+
+                let response;
+                if (gdriveFileId) {
+                    // Update existing file
+                    response = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${gdriveFileId}?uploadType=multipart`, {
+                        method: 'PATCH',
+                        headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token }),
+                        body: form,
+                    });
+                } else {
+                    // Create new file
+                    response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                        method: 'POST',
+                        headers: new Headers({ 'Authorization': 'Bearer ' + gapi.client.getToken().access_token }),
+                        body: form,
+                    });
+                }
+
+                const result = await response.json();
+                if (result.id) {
+                    gdriveFileId = result.id;
+                    showSyncBanner('✅ Saved to Google Drive!', 'success');
+                }
+            } catch (error) {
+                console.error('Error saving to Google Drive:', error);
+                showSyncBanner('❌ Error syncing to Google Drive', 'warning');
+            }
+        }
+
+        // Load from Google Drive
+        async function loadFromGoogleDrive() {
+            if (!isGDriveConnected) return;
+
+            try {
+                // Search for the file
+                const response = await gapi.client.drive.files.list({
+                    q: "name='fcc-elite-tracker-data.json'",
+                    fields: 'files(id, name)',
+                    spaces: 'drive',
+                });
+
+                const files = response.result.files;
+                if (files && files.length > 0) {
+                    gdriveFileId = files[0].id;
+
+                    // Download the file
+                    const fileResponse = await gapi.client.drive.files.get({
+                        fileId: gdriveFileId,
+                        alt: 'media',
+                    });
+
+                    const data = JSON.parse(fileResponse.body);
+                    
+                    // Load teams
+                    if (data.teams && data.teams.length > 0) {
+                        teams = data.teams;
+                        localStorage.setItem('soccerTeams', JSON.stringify(teams));
+                        
+                        // Load current team ID
+                        if (data.currentTeamId && teams.find(t => t.id === data.currentTeamId)) {
+                            currentTeamId = data.currentTeamId;
+                            localStorage.setItem('currentTeamId', currentTeamId.toString());
+                        } else {
+                            currentTeamId = teams[0].id;
+                            localStorage.setItem('currentTeamId', currentTeamId.toString());
+                        }
+
+                        // Load all team data
+                        if (data.teamData) {
+                            Object.keys(data.teamData).forEach(teamKey => {
+                                const teamId = teamKey.replace('team_', '');
+                                const teamInfo = data.teamData[teamKey];
+                                
+                                localStorage.setItem(`team_${teamId}_players`, JSON.stringify(teamInfo.players || []));
+                                localStorage.setItem(`team_${teamId}_evaluations`, JSON.stringify(teamInfo.evaluations || []));
+                                localStorage.setItem(`team_${teamId}_stats`, JSON.stringify(teamInfo.stats || []));
+                            });
+                        }
+
+                        // Load current team's data into memory
+                        loadTeamData();
+                        renderTeamSelector();
+                        renderTeamList();
+                        renderPlayers();
+                        updatePlayerSelects();
+                        
+                        showSyncBanner('✅ All teams loaded from Google Drive!', 'success');
+                    } else {
+                        // Old format compatibility - single team data
+                        players = data.players || [];
+                        evaluations = data.evaluations || [];
+                        stats = data.stats || [];
+                        
+                        // Save to current team
+                        saveTeamData();
+                        renderPlayers();
+                        updatePlayerSelects();
+                        
+                        showSyncBanner('✅ Data loaded from Google Drive!', 'success');
+                    }
+                } else {
+                    // No file exists yet, save current data
+                    await saveToGoogleDrive();
+                }
+            } catch (error) {
+                console.error('Error loading from Google Drive:', error);
+                showSyncBanner('❌ Error loading from Google Drive', 'warning');
+            }
+        }
+
+        function showSyncBanner(message, type) {
+            const banner = document.getElementById('syncBanner');
+            banner.className = type === 'syncing' ? 'sync-banner syncing' : 'sync-banner';
+            banner.innerHTML = `
+                <span style="font-size: 1.2rem;">${type === 'syncing' ? '⏳' : type === 'success' ? '✅' : '⚠️'}</span>
+                <span style="font-weight: 600;">${message}</span>
+            `;
+            banner.style.display = 'flex';
+
+            if (type !== 'syncing') {
+                setTimeout(() => {
+                    banner.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Initialize Google APIs
+        window.addEventListener('load', () => {
+            gapiLoaded();
+            gisLoaded();
+        });
+
+        // Data storage
+        let teams = JSON.parse(localStorage.getItem('soccerTeams')) || [];
+        let currentTeamId = parseInt(localStorage.getItem('currentTeamId')) || null;
+        let players = [];
+        let evaluations = [];
+        let stats = [];
+        let currentTallies = {
+            completedPass: 0,
+            missedPass: 0,
+            defensiveIntervention: 0,
+            progressiveMove: 0,
+            lostPossession: 0,
+            chanceCreated: 0
+        };
+        let currentEvaluation = null;
+        let multiPlayerData = {}; // Stores data for each player during multi-player tracking
+
+        // Initialize teams - create default team if none exist
+        function initializeTeams() {
+            if (teams.length === 0) {
+                const defaultTeam = {
+                    id: Date.now(),
+                    name: 'My Team',
+                    ageGroup: 'Mixed',
+                    coach: '',
+                    dateCreated: new Date().toISOString()
+                };
+                teams.push(defaultTeam);
+                currentTeamId = defaultTeam.id;
+                localStorage.setItem('soccerTeams', JSON.stringify(teams));
+                localStorage.setItem('currentTeamId', currentTeamId.toString());
+            } else if (!currentTeamId || !teams.find(t => t.id === currentTeamId)) {
+                currentTeamId = teams[0].id;
+                localStorage.setItem('currentTeamId', currentTeamId.toString());
+            }
+            
+            loadTeamData();
+            renderTeamSelector();
+            renderTeamList();
+        }
+
+        // Load data for current team
+        function loadTeamData() {
+            if (!currentTeamId) return;
+            
+            const team = teams.find(t => t.id === currentTeamId);
+            if (!team) return;
+
+            // Load team-specific data
+            players = JSON.parse(localStorage.getItem(`team_${currentTeamId}_players`)) || [];
+            evaluations = JSON.parse(localStorage.getItem(`team_${currentTeamId}_evaluations`)) || [];
+            stats = JSON.parse(localStorage.getItem(`team_${currentTeamId}_stats`)) || [];
+        }
+
+        // Save data for current team
+        function saveTeamData() {
+            if (!currentTeamId) return;
+            
+            localStorage.setItem(`team_${currentTeamId}_players`, JSON.stringify(players));
+            localStorage.setItem(`team_${currentTeamId}_evaluations`, JSON.stringify(evaluations));
+            localStorage.setItem(`team_${currentTeamId}_stats`, JSON.stringify(stats));
+        }
+
+        // Team management functions
+        function addTeam(e) {
+            e.preventDefault();
+            
+            const team = {
+                id: Date.now(),
+                name: document.getElementById('team-name').value,
+                ageGroup: document.getElementById('team-age').value,
+                coach: document.getElementById('team-coach').value || '',
+                dateCreated: new Date().toISOString()
+            };
+
+            teams.push(team);
+            localStorage.setItem('soccerTeams', JSON.stringify(teams));
+            
+            if (isGDriveConnected) {
+                saveToGoogleDrive();
+            }
+
+            renderTeamList();
+            renderTeamSelector();
+            document.getElementById('add-team-form').reset();
+            alert('✅ Team created successfully!');
+        }
+
+        function renderTeamSelector() {
+            const select = document.getElementById('team-select');
+            const currentValue = select.value;
+            
+            select.innerHTML = teams.map(t => 
+                `<option value="${t.id}" ${t.id === currentTeamId ? 'selected' : ''}>${t.name}</option>`
+            ).join('');
+        }
+
+        function renderTeamList() {
+            const container = document.getElementById('team-list');
+            
+            if (teams.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 2rem;">No teams created yet.</p>';
+                return;
+            }
+
+            container.innerHTML = teams.map(team => {
+                const teamPlayers = JSON.parse(localStorage.getItem(`team_${team.id}_players`)) || [];
+                const isActive = team.id === currentTeamId;
+                
+                return `
+                    <div class="team-list-item ${isActive ? 'active' : ''}">
+                        <div class="team-list-info">
+                            <h4>
+                                ${team.name}
+                                ${isActive ? '<span class="team-badge">ACTIVE</span>' : ''}
+                            </h4>
+                            <p>${team.ageGroup} • ${teamPlayers.length} player(s) • ${team.coach || 'No coach assigned'}</p>
+                        </div>
+                        <div class="player-actions" style="display: flex; gap: 0.5rem;">
+                            ${!isActive ? `<button class="btn btn-primary btn-small" onclick="activateTeam(${team.id})">✓ Switch To</button>` : ''}
+                            <button class="btn btn-secondary btn-small" onclick="editTeam(${team.id})">✏️ Edit</button>
+                            <button class="btn btn-danger btn-small" onclick="deleteTeam(${team.id})">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchTeam() {
+            const newTeamId = parseInt(document.getElementById('team-select').value);
+            if (!newTeamId || newTeamId === currentTeamId) return;
+            
+            activateTeam(newTeamId);
+        }
+
+        function activateTeam(teamId) {
+            currentTeamId = teamId;
+            localStorage.setItem('currentTeamId', currentTeamId.toString());
+            
+            loadTeamData();
+            renderTeamSelector();
+            renderTeamList();
+            renderPlayers();
+            updatePlayerSelects();
+            
+            const team = teams.find(t => t.id === teamId);
+            alert(`✅ Switched to team: ${team.name}`);
+        }
+
+        function editTeam(teamId) {
+            const team = teams.find(t => t.id === teamId);
+            if (!team) return;
+
+            const newName = prompt('Team Name:', team.name);
+            if (!newName || !newName.trim()) return;
+
+            const newCoach = prompt('Coach Name:', team.coach);
+            
+            team.name = newName.trim();
+            team.coach = newCoach ? newCoach.trim() : '';
+            
+            localStorage.setItem('soccerTeams', JSON.stringify(teams));
+            
+            if (isGDriveConnected) {
+                saveToGoogleDrive();
+            }
+            
+            renderTeamList();
+            renderTeamSelector();
+        }
+
+        function deleteTeam(teamId) {
+            const team = teams.find(t => t.id === teamId);
+            if (!team) return;
+
+            if (teams.length === 1) {
+                alert('❌ Cannot delete the last team. You must have at least one team.');
+                return;
+            }
+
+            const teamPlayers = JSON.parse(localStorage.getItem(`team_${teamId}_players`)) || [];
+            
+            const confirmMsg = teamPlayers.length > 0 
+                ? `Are you sure you want to delete "${team.name}"? This will permanently delete ${teamPlayers.length} player(s) and all their data.`
+                : `Are you sure you want to delete "${team.name}"?`;
+
+            if (!confirm(confirmMsg)) return;
+
+            // Delete team data
+            localStorage.removeItem(`team_${teamId}_players`);
+            localStorage.removeItem(`team_${teamId}_evaluations`);
+            localStorage.removeItem(`team_${teamId}_stats`);
+            
+            // Remove team
+            teams = teams.filter(t => t.id !== teamId);
+            localStorage.setItem('soccerTeams', JSON.stringify(teams));
+
+            // If deleted current team, switch to first available team
+            if (teamId === currentTeamId) {
+                currentTeamId = teams[0].id;
+                localStorage.setItem('currentTeamId', currentTeamId.toString());
+                loadTeamData();
+                renderPlayers();
+                updatePlayerSelects();
+            }
+
+            if (isGDriveConnected) {
+                saveToGoogleDrive();
+            }
+
+            renderTeamList();
+            renderTeamSelector();
+            alert('✅ Team deleted successfully!');
+        }
+
+        // Multi-player tracking functions
+        function switchTrackingMode(mode) {
+            const singleTracking = document.getElementById('single-player-tracking');
+            const multiTracking = document.getElementById('multi-player-tracking');
+            const modeBtns = document.querySelectorAll('.mode-btn');
+
+            modeBtns.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (mode === 'single') {
+                singleTracking.style.display = 'block';
+                multiTracking.classList.remove('active');
+            } else {
+                singleTracking.style.display = 'none';
+                multiTracking.classList.add('active');
+                initializeMultiPlayerTracking();
+            }
+        }
+
+        function initializeMultiPlayerTracking() {
+            // Set today's date
+            document.getElementById('multi-stats-date').value = new Date().toISOString().split('T')[0];
+
+            // Initialize data for each player
+            multiPlayerData = {};
+            players.forEach(player => {
+                multiPlayerData[player.id] = {
+                    goals: 0,
+                    assists: 0,
+                    minutes: 0,
+                    completedPass: 0,
+                    missedPass: 0,
+                    defensiveIntervention: 0,
+                    progressiveMove: 0,
+                    lostPossession: 0,
+                    chanceCreated: 0
+                };
+            });
+
+            renderMultiPlayerGrid();
+        }
+
+        function renderMultiPlayerGrid() {
+            const grid = document.getElementById('multi-player-grid');
+            
+            if (players.length === 0) {
+                grid.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 2rem;">No players added yet. Add players first!</p>';
+                return;
+            }
+
+            grid.innerHTML = players.map(player => `
+                <div class="player-tracking-card">
+                    <h4>${player.name}</h4>
+                    <div class="quick-stats">
+                        <div class="quick-stat">
+                            <div class="quick-stat-label">Goals</div>
+                            <input type="number" class="quick-stat-value" id="mp-goals-${player.id}" 
+                                value="${multiPlayerData[player.id].goals}" min="0" 
+                                onchange="updateMultiPlayerStat(${player.id}, 'goals', this.value)"
+                                style="border: none; background: transparent; width: 100%; text-align: center;">
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-label">Assists</div>
+                            <input type="number" class="quick-stat-value" id="mp-assists-${player.id}" 
+                                value="${multiPlayerData[player.id].assists}" min="0"
+                                onchange="updateMultiPlayerStat(${player.id}, 'assists', this.value)"
+                                style="border: none; background: transparent; width: 100%; text-align: center;">
+                        </div>
+                        <div class="quick-stat">
+                            <div class="quick-stat-label">Minutes</div>
+                            <input type="number" class="quick-stat-value" id="mp-minutes-${player.id}" 
+                                value="${multiPlayerData[player.id].minutes}" min="0"
+                                onchange="updateMultiPlayerStat(${player.id}, 'minutes', this.value)"
+                                style="border: none; background: transparent; width: 100%; text-align: center;">
+                        </div>
+                    </div>
+                    <div class="quick-tallies">
+                        <div class="quick-tally">
+                            <span style="font-size: 0.8rem;">✅ Pass</span>
+                            <div class="quick-tally-controls">
+                                <button class="quick-tally-btn" onclick="updateMultiPlayerTally(${player.id}, 'completedPass', -1)">−</button>
+                                <div class="quick-tally-value" id="mp-completedPass-${player.id}">${multiPlayerData[player.id].completedPass}</div>
+                                <button class="quick-tally-btn" onclick="updateMultiPlayerTally(${player.id}, 'completedPass', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="quick-tally">
+                            <span style="font-size: 0.8rem;">❌ Miss</span>
+                            <div class="quick-tally-controls">
+                                <button class="quick-tally-btn" onclick="updateMultiPlayerTally(${player.id}, 'missedPass', -1)">−</button>
+                                <div class="quick-tally-value" id="mp-missedPass-${player.id}">${multiPlayerData[player.id].missedPass}</div>
+                                <button class="quick-tally-btn" onclick="updateMultiPlayerTally(${player.id}, 'missedPass', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="quick-tally">
+                            <span style="font-size: 0.8rem;">🛡️ Defend</span>
+                            <div class="quick-tally-controls">
+                                <button class="quick-tally-btn" onclick="updateMultiPlayerTally(${player.id}, 'defensiveIntervention', -1)">−</button>
+                                <div class="quick-tally-value" id="mp-defensiveIntervention-${player.id}">${multiPlayerData[player.id].defensiveIntervention}</div>
+                                <button class="quick-tally-btn" onclick="updateMultiPlayerTally(${player.id}, 'defensiveIntervention', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="quick-tally">
+                            <span style="font-size: 0.8rem;">⚡ Progress</span>
+                            <div class="quick-tally-controls">
+                                <button class="quick-tally-btn" onclick="updateMultiPlayerTally(${player.id}, 'progressiveMove', -1)">−</button>
+                                <div class="quick-tally-value" id="mp-progressiveMove-${player.id}">${multiPlayerData[player.id].progressiveMove}</div>
+                                <button class="quick-tally-btn" onclick="updateMultiPlayerTally(${player.id}, 'progressiveMove', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="quick-tally">
+                            <span style="font-size: 0.8rem;">💨 Lost</span>
+                            <div class="quick-tally-controls">
+                                <button class="quick-tally-btn" onclick="updateMultiPlayerTally(${player.id}, 'lostPossession', -1)">−</button>
+                                <div class="quick-tally-value" id="mp-lostPossession-${player.id}">${multiPlayerData[player.id].lostPossession}</div>
+                                <button class="quick-tally-btn" onclick="updateMultiPlayerTally(${player.id}, 'lostPossession', 1)">+</button>
+                            </div>
+                        </div>
+                        <div class="quick-tally">
+                            <span style="font-size: 0.8rem;">🎯 Chance</span>
+                            <div class="quick-tally-controls">
+                                <button class="quick-tally-btn" onclick="updateMultiPlayerTally(${player.id}, 'chanceCreated', -1)">−</button>
+                                <div class="quick-tally-value" id="mp-chanceCreated-${player.id}">${multiPlayerData[player.id].chanceCreated}</div>
+                                <button class="quick-tally-btn" onclick="updateMultiPlayerTally(${player.id}, 'chanceCreated', 1)">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateMultiPlayerStat(playerId, stat, value) {
+            multiPlayerData[playerId][stat] = parseInt(value) || 0;
+        }
+
+        function updateMultiPlayerTally(playerId, tally, change) {
+            multiPlayerData[playerId][tally] = Math.max(0, multiPlayerData[playerId][tally] + change);
+            document.getElementById(`mp-${tally}-${playerId}`).textContent = multiPlayerData[playerId][tally];
+        }
+
+        function saveAllPlayerStats() {
+            const type = document.getElementById('multi-stats-type').value;
+            const date = document.getElementById('multi-stats-date').value;
+            const opponent = document.getElementById('multi-stats-opponent').value;
+
+            if (!type || !date) {
+                alert('Please select type and date');
+                return;
+            }
+
+            let savedCount = 0;
+            
+            players.forEach(player => {
+                const playerData = multiPlayerData[player.id];
+                
+                // Only save if player has any data entered
+                const hasData = playerData.goals > 0 || playerData.assists > 0 || playerData.minutes > 0 ||
+                               playerData.completedPass > 0 || playerData.missedPass > 0 || 
+                               playerData.defensiveIntervention > 0 || playerData.progressiveMove > 0 ||
+                               playerData.lostPossession > 0 || playerData.chanceCreated > 0;
+
+                if (hasData) {
+                    const stat = {
+                        id: Date.now() + player.id, // Unique ID for each
+                        playerId: player.id,
+                        playerName: player.name,
+                        type: type,
+                        date: date,
+                        opponent: opponent || '',
+                        goals: playerData.goals,
+                        assists: playerData.assists,
+                        minutes: playerData.minutes,
+                        completedPass: playerData.completedPass,
+                        missedPass: playerData.missedPass,
+                        defensiveIntervention: playerData.defensiveIntervention,
+                        progressiveMove: playerData.progressiveMove,
+                        lostPossession: playerData.lostPossession,
+                        chanceCreated: playerData.chanceCreated,
+                        notes: ''
+                    };
+
+                    stats.push(stat);
+                    savedCount++;
+                }
+            });
+
+            if (savedCount > 0) {
+                saveTeamData();
+                
+                if (isGDriveConnected) {
+                    saveToGoogleDrive();
+                }
+
+                alert(`✅ Saved stats for ${savedCount} player(s)!`);
+                
+                // Reset and re-initialize
+                initializeMultiPlayerTracking();
+            } else {
+                alert('No player data to save. Please enter stats for at least one player.');
+            }
+        }
+
+        // View switching
+        function switchView(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById(`${viewName}-view`).classList.add('active');
+            event.target.classList.add('active');
+
+            if (viewName === 'stats') {
+                renderRecentStats();
+            } else if (viewName === 'progress') {
+                renderProgress();
+            }
+        }
+
+        // Player management
+        function addPlayer(e) {
+            e.preventDefault();
+            
+            if (!currentTeamId) {
+                alert('Please select or create a team first!');
+                return;
+            }
+
+            const secondaryPosition = document.getElementById('player-position-secondary').value;
+
+            const player = {
+                id: Date.now(),
+                name: document.getElementById('player-name').value,
+                position: document.getElementById('player-position').value,
+                positionSecondary: secondaryPosition || '',
+                age: document.getElementById('player-age').value,
+                dateAdded: new Date().toISOString()
+            };
+
+            players.push(player);
+            saveTeamData();
+            
+            // Save to Google Drive if connected
+            if (isGDriveConnected) {
+                saveToGoogleDrive();
+            }
+
+            renderPlayers();
+            updatePlayerSelects();
+            document.getElementById('add-player-form').reset();
+        }
+
+        function renderPlayers() {
+            const container = document.getElementById('player-list');
+            
+            if (players.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 2rem;">No players added yet. Add your first player above!</p>';
+                return;
+            }
+
+            container.innerHTML = players.map(player => {
+                const positionText = player.positionSecondary 
+                    ? `${player.position} / ${player.positionSecondary}` 
+                    : player.position;
+                
+                return `
+                    <div class="player-item">
+                        <div class="player-info">
+                            <h3>${player.name}</h3>
+                            <p>${positionText} • ${player.age}</p>
+                        </div>
+                        <div class="player-actions">
+                            <button class="btn btn-secondary btn-small" onclick="editPlayer(${player.id})">✏️ Edit</button>
+                            <button class="btn btn-danger btn-small" onclick="deletePlayer(${player.id})">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function editPlayer(id) {
+            const player = players.find(p => p.id === id);
+            if (!player) return;
+
+            // Store the player ID being edited
+            document.getElementById('edit-player-form').dataset.playerId = id;
+
+            // Populate the form with current values
+            document.getElementById('edit-player-name').value = player.name;
+            document.getElementById('edit-player-position').value = player.position;
+            document.getElementById('edit-player-position-secondary').value = player.positionSecondary || '';
+            document.getElementById('edit-player-age').value = player.age;
+
+            // Show the modal
+            document.getElementById('edit-player-modal').classList.add('active');
+        }
+
+        function closeEditPlayerModal() {
+            document.getElementById('edit-player-modal').classList.remove('active');
+            document.getElementById('edit-player-form').reset();
+        }
+
+        function savePlayerEdit(e) {
+            e.preventDefault();
+
+            const playerId = parseInt(document.getElementById('edit-player-form').dataset.playerId);
+            const player = players.find(p => p.id === playerId);
+            
+            if (!player) return;
+
+            // Get updated values
+            const newName = document.getElementById('edit-player-name').value.trim();
+            const newPosition = document.getElementById('edit-player-position').value;
+            const newPositionSecondary = document.getElementById('edit-player-position-secondary').value;
+            const newAge = document.getElementById('edit-player-age').value;
+
+            // Update player
+            player.name = newName;
+            player.position = newPosition;
+            player.positionSecondary = newPositionSecondary || '';
+            player.age = newAge;
+
+            // Update all stats and evaluations with the new player name
+            stats.forEach(s => {
+                if (s.playerId === playerId) {
+                    s.playerName = newName;
+                }
+            });
+
+            evaluations.forEach(e => {
+                if (e.playerId === playerId) {
+                    e.playerName = newName;
+                }
+            });
+
+            // Save to storage
+            saveTeamData();
+            
+            if (isGDriveConnected) {
+                saveToGoogleDrive();
+            }
+            
+            // Update UI
+            renderPlayers();
+            updatePlayerSelects();
+            closeEditPlayerModal();
+            
+            alert('✅ Player updated successfully!');
+        }
+
+        function deletePlayer(id) {
+            if (confirm('Are you sure you want to delete this player? All their data will be lost.')) {
+                players = players.filter(p => p.id !== id);
+                evaluations = evaluations.filter(e => e.playerId !== id);
+                stats = stats.filter(s => s.playerId !== id);
+                
+                saveTeamData();
+                
+                if (isGDriveConnected) {
+                    saveToGoogleDrive();
+                }
+                
+                renderPlayers();
+                updatePlayerSelects();
+            }
+        }
+
+        function updatePlayerSelects() {
+            const selects = ['eval-player', 'stats-player', 'progress-player', 'export-player'];
+            const options = '<option value="">Choose a player</option>' + 
+                players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+            
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                const currentValue = select.value;
+                select.innerHTML = options;
+                if (currentValue && players.find(p => p.id === parseInt(currentValue))) {
+                    select.value = currentValue;
+                }
+            });
+        }
+
+        // Evaluation functions
+        function loadPlayerEvaluation() {
+            const playerId = parseInt(document.getElementById('eval-player').value);
+            if (!playerId) {
+                document.getElementById('evaluation-content').innerHTML = '';
+                return;
+            }
+
+            const player = players.find(p => p.id === playerId);
+            const playerEvals = evaluations.filter(e => e.playerId === playerId).sort((a, b) => new Date(b.date) - new Date(a.date));
+            const content = document.getElementById('evaluation-content');
+            
+            let html = `
+                <div style="margin-top: 1.5rem;">
+                    <h3 style="color: var(--primary); margin-bottom: 1rem;">Evaluating: ${player.name}</h3>
+                    <button class="btn btn-primary" onclick="openEvaluationModal(${playerId})">📊 Start New Evaluation</button>
+                </div>
+            `;
+
+            if (playerEvals.length > 0) {
+                html += `
+                    <div class="evaluation-history">
+                        <h3>📋 Evaluation History (${playerEvals.length})</h3>
+                        ${playerEvals.map(eval => {
+                            const allRatings = Object.values(eval.ratings).filter(r => r > 0);
+                            const totalScore = allRatings.reduce((a, b) => a + b, 0);
+                            const maxPossible = allRatings.length * 4;
+                            const avgScore = allRatings.length > 0 ? (totalScore / allRatings.length).toFixed(2) : 0;
+
+                            return `
+                                <div class="eval-history-item">
+                                    <div class="eval-history-info">
+                                        <h4>Evaluation - ${new Date(eval.date).toLocaleDateString('en-US', {weekday: 'short', year: 'numeric', month: 'short', day: 'numeric'})}</h4>
+                                        <p>${allRatings.length} skills evaluated</p>
+                                    </div>
+                                    <div class="eval-history-score">
+                                        <div class="score">${totalScore} / ${maxPossible}</div>
+                                        <div class="label">Avg: ${avgScore} / 4.0</div>
+                                    </div>
+                                    <button class="btn btn-danger btn-small btn-delete-eval" onclick="deleteEvaluation(${eval.id})">
+                                        🗑️ Delete
+                                    </button>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }
+
+            content.innerHTML = html;
+        }
+
+        function openEvaluationModal(playerId) {
+            const player = players.find(p => p.id === playerId);
+            currentEvaluation = {
+                playerId: playerId,
+                playerName: player.name,
+                date: new Date().toISOString().split('T')[0],
+                ratings: {},
+                notes: {}
+            };
+
+            const modalContent = document.getElementById('eval-form-content');
+            modalContent.innerHTML = `
+                <div class="form-group">
+                    <label>Evaluation Date</label>
+                    <input type="date" id="eval-date" value="${currentEvaluation.date}" onchange="currentEvaluation.date = this.value">
+                </div>
+
+                <div class="rating-scale">
+                    <h4>📊 THE EVALUATION SCALE</h4>
+                    <ul>
+                        <li><strong>1 - Emerging:</strong> Beginning to understand; needs constant guidance.</li>
+                        <li><strong>2 - Developing:</strong> Understands the concept; execution is inconsistent.</li>
+                        <li><strong>3 - Proficient:</strong> Consistently executes in training and matches.</li>
+                        <li><strong>4 - Academy Standard:</strong> Demonstrates advanced understanding; a leader in this area.</li>
+                    </ul>
+                </div>
+
+                ${generateDetailedEvaluationSection('cognitive', '1. COGNITIVE STRUCTURE (Game Intelligence)', [
+                    {id: 'perception', label: 'Perception (Scanning)', description: 'Looks before receiving. Identifies teammates & opponents.'},
+                    {id: 'decision', label: 'Decision Making', description: '"Look, see, predict, decide." Chooses the best option for the team.'},
+                    {id: 'anticipation', label: 'Anticipation', description: 'Reads the opponent\'s intentions before they act.'},
+                    {id: 'triangulation', label: 'Positional Awareness (Triangulation)', description: 'Understands triangulation and space creation. Does not block lines.'},
+                    {id: 'passing-lines', label: 'Positional Awareness (Passing Lines)', description: 'Understands passing lines.'},
+                    {id: 'space', label: 'Positional Awareness (Finding Space)', description: 'Is able to find space away from defender.'},
+                    {id: 'focus', label: 'Focus', description: 'Maintains concentration (Narrow vs. Wide focus) during transitions.'}
+                ])}
+
+                ${generateDetailedEvaluationSection('coordination', '2. COORDINATION STRUCTURE (Technique in Context)', [
+                    {id: 'passing', label: 'Passing Quality', description: 'Accuracy/Weight. Can execute short (continuity) and long (relief) passes.'},
+                    {id: 'body', label: 'Body Profile', description: 'Receives across the body (back foot) to keep the game flowing.'},
+                    {id: 'control', label: 'Guided Control', description: 'First touch directs the ball away from pressure.'},
+                    {id: 'bilateral', label: 'Bilateralism', description: 'Comfortable using both feet for passing and control.'}
+                ])}
+
+                ${generateDetailedEvaluationSection('socio', '3. SOCIO-AFFECTIVE STRUCTURE (The Teammate)', [
+                    {id: 'empathy', label: 'Empathy', description: 'Plays to help the teammate, not just to avoid personal failure.'},
+                    {id: 'communication', label: 'Communication', description: 'Directs teammates verbally and non-verbally (body shape).'},
+                    {id: 'solidarity', label: 'Solidarity', description: 'Celebrates teammates\' success. Offers support after mistakes.'},
+                    {id: 'respect', label: 'Respect', description: 'Respects the referee, opponents, coaches, and the ball.'}
+                ])}
+
+                ${generateDetailedEvaluationSection('emotional', '4. EMOTIONAL-VOLITIONAL STRUCTURE (The Heart)', [
+                    {id: 'desire', label: 'Desire for the Ball', description: 'Shows initiative. Wants the ball to lead the game.'},
+                    {id: 'recovery', label: 'Immediate Recovery', description: 'Reacts instantly to loss. Sprints to press the ball carrier.'},
+                    {id: 'resilience', label: 'Resilience', description: 'Overcomes errors quickly. Maintains intensity when losing.'},
+                    {id: 'responsibility', label: 'Responsibility', description: 'Accepts their role in defensive coverage and collective pressure.'}
+                ])}
+
+                ${generateDetailedEvaluationSection('creative', '5. CREATIVE-EXPRESSIVE STRUCTURE (The Spark)', [
+                    {id: 'deception', label: 'Deception', description: 'Uses feints/body shape to trick opponents before receiving/passing.'},
+                    {id: 'risk', label: 'Risk Taking', description: 'Attempts the difficult pass or 1v1 in the "Definition Zone" (D).'},
+                    {id: 'originality', label: 'Originality', description: 'Finds unexpected solutions to complex problems.'}
+                ])}
+
+                <div class="eval-totals" id="evalTotals">
+                    <div class="eval-total-card">
+                        <h4>Cognitive Average</h4>
+                        <div class="average" id="avg-cognitive">-</div>
+                    </div>
+                    <div class="eval-total-card">
+                        <h4>Coordination Average</h4>
+                        <div class="average" id="avg-coordination">-</div>
+                    </div>
+                    <div class="eval-total-card">
+                        <h4>Socio-Affective Average</h4>
+                        <div class="average" id="avg-socio">-</div>
+                    </div>
+                    <div class="eval-total-card">
+                        <h4>Emotional-Volitional Average</h4>
+                        <div class="average" id="avg-emotional">-</div>
+                    </div>
+                    <div class="eval-total-card">
+                        <h4>Creative-Expressive Average</h4>
+                        <div class="average" id="avg-creative">-</div>
+                    </div>
+                    <div class="eval-total-card" style="grid-column: span 2;">
+                        <h4>Overall Average</h4>
+                        <div class="average" id="avg-overall">-</div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="saveEvaluation()">💾 Save Evaluation</button>
+                    <button class="btn btn-secondary" onclick="cancelEvaluation()">Cancel</button>
+                </div>
+            `;
+
+            document.getElementById('eval-modal').classList.add('active');
+        }
+
+        function generateDetailedEvaluationSection(category, title, skills) {
+            return `
+                <div class="evaluation-section">
+                    <h3>${title}</h3>
+                    ${skills.map(skill => `
+                        <div class="skill-item">
+                            <div class="skill-header">
+                                <span class="skill-name">${skill.label}</span>
+                            </div>
+                            <div class="skill-description">${skill.description}</div>
+                            <div class="rating-buttons">
+                                ${[1, 2, 3, 4].map(rating => `
+                                    <button type="button" class="rating-btn" data-skill="${category}-${skill.id}" data-rating="${rating}" onclick="selectRating('${category}-${skill.id}', ${rating})">${rating}</button>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div class="notes-area">
+                        <div class="form-group">
+                            <label>Notes / Comments (${title.split('(')[0].trim()})</label>
+                            <textarea id="${category}-notes" placeholder="Add observations, specific examples, or areas for improvement..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectRating(skillId, rating) {
+            currentEvaluation.ratings[skillId] = rating;
+            
+            document.querySelectorAll(`[data-skill="${skillId}"]`).forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            document.querySelector(`[data-skill="${skillId}"][data-rating="${rating}"]`).classList.add('selected');
+            
+            updateEvaluationTotals();
+        }
+
+        function updateEvaluationTotals() {
+            const categories = {
+                cognitive: ['perception', 'decision', 'anticipation', 'triangulation', 'passing-lines', 'space', 'focus'],
+                coordination: ['passing', 'body', 'control', 'bilateral'],
+                socio: ['empathy', 'communication', 'solidarity', 'respect'],
+                emotional: ['desire', 'recovery', 'resilience', 'responsibility'],
+                creative: ['deception', 'risk', 'originality']
+            };
+
+            let hasAnyRating = false;
+            let overallSum = 0;
+            let overallCount = 0;
+
+            Object.keys(categories).forEach(category => {
+                const skills = categories[category];
+                const ratings = skills.map(skill => currentEvaluation.ratings[`${category}-${skill}`]).filter(r => r !== undefined);
+                
+                if (ratings.length > 0) {
+                    hasAnyRating = true;
+                    const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+                    document.getElementById(`avg-${category}`).textContent = avg.toFixed(2);
+                    overallSum += avg;
+                    overallCount++;
+                } else {
+                    document.getElementById(`avg-${category}`).textContent = '-';
+                }
+            });
+
+            if (overallCount > 0) {
+                const overallAvg = overallSum / overallCount;
+                document.getElementById('avg-overall').textContent = overallAvg.toFixed(2);
+            } else {
+                document.getElementById('avg-overall').textContent = '-';
+            }
+
+            if (hasAnyRating) {
+                document.getElementById('evalTotals').classList.add('visible');
+            } else {
+                document.getElementById('evalTotals').classList.remove('visible');
+            }
+        }
+
+        function saveEvaluation() {
+            if (Object.keys(currentEvaluation.ratings).length === 0) {
+                alert('Please add at least one rating before saving.');
+                return;
+            }
+
+            // Collect notes from each category
+            const categories = ['cognitive', 'coordination', 'socio', 'emotional', 'creative'];
+            categories.forEach(category => {
+                const notesField = document.getElementById(`${category}-notes`);
+                if (notesField && notesField.value.trim()) {
+                    currentEvaluation.notes[category] = notesField.value.trim();
+                }
+            });
+
+            const evaluation = {
+                id: Date.now(),
+                ...currentEvaluation
+            };
+
+            evaluations.push(evaluation);
+            saveTeamData();
+            
+            if (isGDriveConnected) {
+                saveToGoogleDrive();
+            }
+
+            closeEvaluationModal();
+            alert('✅ Evaluation saved successfully!');
+        }
+
+        function cancelEvaluation() {
+            if (confirm('Are you sure you want to cancel? All ratings will be lost.')) {
+                closeEvaluationModal();
+            }
+        }
+
+        function deleteEvaluation(evalId) {
+            if (confirm('Are you sure you want to delete this evaluation? This cannot be undone.')) {
+                evaluations = evaluations.filter(e => e.id !== evalId);
+                saveTeamData();
+                
+                if (isGDriveConnected) {
+                    saveToGoogleDrive();
+                }
+
+                loadPlayerEvaluation();
+                alert('✅ Evaluation deleted successfully!');
+            }
+        }
+
+        function closeEvaluationModal() {
+            document.getElementById('eval-modal').classList.remove('active');
+            currentEvaluation = null;
+        }
+
+        // Stats functions
+        function updateTally(type, change) {
+            currentTallies[type] = Math.max(0, currentTallies[type] + change);
+            document.getElementById(`tally-${type}`).textContent = currentTallies[type];
+        }
+
+        function addStats(e) {
+            e.preventDefault();
+
+            const playerId = parseInt(document.getElementById('stats-player').value);
+            const player = players.find(p => p.id === playerId);
+
+            const stat = {
+                id: Date.now(),
+                playerId: playerId,
+                playerName: player.name,
+                type: document.getElementById('stats-type').value,
+                date: document.getElementById('stats-date').value,
+                opponent: document.getElementById('stats-opponent').value || '',
+                goals: parseInt(document.getElementById('stats-goals').value),
+                assists: parseInt(document.getElementById('stats-assists').value),
+                minutes: parseInt(document.getElementById('stats-minutes').value),
+                completedPass: currentTallies.completedPass,
+                missedPass: currentTallies.missedPass,
+                defensiveIntervention: currentTallies.defensiveIntervention,
+                progressiveMove: currentTallies.progressiveMove,
+                lostPossession: currentTallies.lostPossession,
+                chanceCreated: currentTallies.chanceCreated,
+                notes: document.getElementById('stats-notes').value
+            };
+
+            stats.push(stat);
+            saveTeamData();
+            
+            if (isGDriveConnected) {
+                saveToGoogleDrive();
+            }
+
+            // Reset form and tallies
+            document.getElementById('stats-form').reset();
+            Object.keys(currentTallies).forEach(key => {
+                currentTallies[key] = 0;
+                document.getElementById(`tally-${key}`).textContent = '0';
+            });
+
+            renderRecentStats();
+            alert('✅ Performance data saved!');
+        }
+
+        function renderRecentStats() {
+            const container = document.getElementById('recent-stats');
+            const recentStats = stats.slice(-20).reverse(); // Show more stats
+
+            if (recentStats.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 2rem;">No performance data recorded yet.</p>';
+                return;
+            }
+
+            container.innerHTML = recentStats.map(s => `
+                <div class="event-item">
+                    <div class="event-info">
+                        <h4>${s.playerName} - ${s.type === 'game' ? '⚽ Game' : '🏃 Practice'}</h4>
+                        <p>${new Date(s.date).toLocaleDateString()} ${s.opponent ? `vs ${s.opponent}` : ''}</p>
+                    </div>
+                    <div class="event-stats">
+                        ⚽ ${s.goals} • 🎯 ${s.assists} • ⏱️ ${s.minutes}'
+                    </div>
+                    <button class="btn btn-danger btn-small" onclick="deleteStat(${s.id})" style="margin-left: 1rem;">
+                        🗑️
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function deleteStat(statId) {
+            if (confirm('Delete this performance record?')) {
+                stats = stats.filter(s => s.id !== statId);
+                saveTeamData();
+                
+                if (isGDriveConnected) {
+                    saveToGoogleDrive();
+                }
+
+                renderRecentStats();
+                alert('✅ Performance record deleted!');
+            }
+        }
+
+        // Progress functions
+        function renderProgress() {
+            const playerId = parseInt(document.getElementById('progress-player').value);
+            const container = document.getElementById('progress-content');
+
+            if (!playerId) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 2rem;">Please select a player to view progress.</p>';
+                return;
+            }
+
+            const player = players.find(p => p.id === playerId);
+            const playerStats = stats.filter(s => s.playerId === playerId);
+            const playerEvals = evaluations.filter(e => e.playerId === playerId).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            if (playerStats.length === 0 && playerEvals.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--text-light); padding: 2rem;">No data available for this player yet.</p>';
+                return;
+            }
+
+            const totalGoals = playerStats.reduce((sum, s) => sum + s.goals, 0);
+            const totalAssists = playerStats.reduce((sum, s) => sum + s.assists, 0);
+            const totalMinutes = playerStats.reduce((sum, s) => sum + s.minutes, 0);
+            const gamesPlayed = playerStats.filter(s => s.type === 'game').length;
+
+            // Calculate overall evaluation score
+            let overallEvalScore = '-';
+            let evalScoreText = '-';
+            if (playerEvals.length > 0) {
+                const latestEval = playerEvals[playerEvals.length - 1];
+                const allRatings = Object.values(latestEval.ratings).filter(r => r > 0);
+                if (allRatings.length > 0) {
+                    const totalScore = allRatings.reduce((a, b) => a + b, 0);
+                    const maxPossible = allRatings.length * 4; // Each skill is out of 4
+                    const avgScore = totalScore / allRatings.length;
+                    overallEvalScore = avgScore.toFixed(2);
+                    evalScoreText = `${totalScore} / ${maxPossible}`;
+                }
+            }
+
+            let html = `
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Total Goals</h4>
+                        <div class="value">${totalGoals}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Total Assists</h4>
+                        <div class="value">${totalAssists}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Games Played</h4>
+                        <div class="value">${gamesPlayed}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Minutes Played</h4>
+                        <div class="value">${totalMinutes}</div>
+                    </div>
+                    <div class="stat-card" style="grid-column: span 2; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        <h4>Latest Evaluation Score</h4>
+                        <div class="value">${evalScoreText}</div>
+                        <div style="font-size: 0.9rem; margin-top: 0.5rem; opacity: 0.9;">Average: ${overallEvalScore} / 4.0</div>
+                    </div>
+                </div>
+            `;
+
+            // Add Performance Stats Over Time Charts
+            if (playerStats.length > 1) {
+                // Sort stats by date
+                const sortedStats = [...playerStats].sort((a, b) => new Date(a.date) - new Date(b.date));
+                
+                // Limit to last 10 games for readability
+                const recentStats = sortedStats.slice(-10);
+
+                html += `
+                    <h2 style="font-family: 'Bebas Neue', cursive; color: var(--primary); margin: 2rem 0 1rem; letter-spacing: 1px; font-size: 1.5rem;">📊 PERFORMANCE TRENDS</h2>
+                `;
+
+                // Goals & Assists Over Time
+                const goalsData = recentStats.map(s => s.goals);
+                const assistsData = recentStats.map(s => s.assists);
+                const maxGoalsAssists = Math.max(...goalsData, ...assistsData, 1);
+
+                html += `
+                    <div class="progress-chart">
+                        <h3>Goals & Assists Over Time</h3>
+                        <div class="chart-bars" style="height: 250px;">
+                            ${recentStats.map((s, idx) => {
+                                const goalsHeight = (s.goals / maxGoalsAssists) * 100;
+                                const assistsHeight = (s.assists / maxGoalsAssists) * 100;
+                                return `
+                                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0.25rem;">
+                                        <div style="background: linear-gradient(to top, #10b981 0%, #34d399 100%); width: 45%; height: ${goalsHeight}%; min-height: ${s.goals > 0 ? '20px' : '0'}; border-radius: 4px 4px 0 0; position: relative;">
+                                            ${s.goals > 0 ? `<span style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 700; color: #10b981;">⚽${s.goals}</span>` : ''}
+                                        </div>
+                                        <div style="background: linear-gradient(to top, #3b82f6 0%, #60a5fa 100%); width: 45%; height: ${assistsHeight}%; min-height: ${s.assists > 0 ? '20px' : '0'}; border-radius: 4px 4px 0 0; position: relative;">
+                                            ${s.assists > 0 ? `<span style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); font-size: 0.75rem; font-weight: 700; color: #3b82f6;">🎯${s.assists}</span>` : ''}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <div class="chart-legend">
+                            ${recentStats.map(s => new Date(s.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})).join(' • ')}
+                        </div>
+                        <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 1rem; font-size: 0.9rem;">
+                            <div><span style="display: inline-block; width: 12px; height: 12px; background: #10b981; border-radius: 2px; margin-right: 0.5rem;"></span>Goals</div>
+                            <div><span style="display: inline-block; width: 12px; height: 12px; background: #3b82f6; border-radius: 2px; margin-right: 0.5rem;"></span>Assists</div>
+                        </div>
+                    </div>
+                `;
+
+                // Pass Completion Rate
+                const passCompletionData = recentStats.map(s => {
+                    const total = s.completedPass + s.missedPass;
+                    return total > 0 ? (s.completedPass / total * 100) : 0;
+                });
+
+                html += `
+                    <div class="progress-chart">
+                        <h3>Pass Completion Rate (%)</h3>
+                        <div class="chart-bars">
+                            ${passCompletionData.map((rate, idx) => {
+                                const height = rate;
+                                const color = rate >= 75 ? '#10b981' : rate >= 60 ? '#f59e0b' : '#ef4444';
+                                return `
+                                    <div class="chart-bar" style="height: ${height}%; background: linear-gradient(to top, ${color} 0%, ${color}99 100%);">
+                                        <span class="chart-bar-label">${rate.toFixed(0)}%</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <div class="chart-legend">
+                            ${recentStats.map(s => new Date(s.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})).join(' • ')}
+                        </div>
+                    </div>
+                `;
+
+                // Key Actions Over Time (Progressive Moves, Defensive Interventions, Chances Created)
+                const maxActions = Math.max(
+                    ...recentStats.map(s => Math.max(s.progressiveMove || 0, s.defensiveIntervention || 0, s.chanceCreated || 0)),
+                    1
+                );
+
+                html += `
+                    <div class="progress-chart">
+                        <h3>Key Actions Over Time</h3>
+                        <div class="chart-bars" style="height: 250px;">
+                            ${recentStats.map((s, idx) => {
+                                const progHeight = ((s.progressiveMove || 0) / maxActions) * 100;
+                                const defHeight = ((s.defensiveIntervention || 0) / maxActions) * 100;
+                                const chanceHeight = ((s.chanceCreated || 0) / maxActions) * 100;
+                                return `
+                                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0.2rem;">
+                                        <div style="background: linear-gradient(to top, #8b5cf6 0%, #a78bfa 100%); width: 30%; height: ${progHeight}%; min-height: ${s.progressiveMove > 0 ? '15px' : '0'}; border-radius: 3px 3px 0 0; position: relative;">
+                                            ${s.progressiveMove > 0 ? `<span style="position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: #8b5cf6;">${s.progressiveMove}</span>` : ''}
+                                        </div>
+                                        <div style="background: linear-gradient(to top, #ef4444 0%, #f87171 100%); width: 30%; height: ${defHeight}%; min-height: ${s.defensiveIntervention > 0 ? '15px' : '0'}; border-radius: 3px 3px 0 0; position: relative;">
+                                            ${s.defensiveIntervention > 0 ? `<span style="position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: #ef4444;">${s.defensiveIntervention}</span>` : ''}
+                                        </div>
+                                        <div style="background: linear-gradient(to top, #f59e0b 0%, #fbbf24 100%); width: 30%; height: ${chanceHeight}%; min-height: ${s.chanceCreated > 0 ? '15px' : '0'}; border-radius: 3px 3px 0 0; position: relative;">
+                                            ${s.chanceCreated > 0 ? `<span style="position: absolute; top: -18px; left: 50%; transform: translateX(-50%); font-size: 0.7rem; font-weight: 700; color: #f59e0b;">${s.chanceCreated}</span>` : ''}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                        <div class="chart-legend">
+                            ${recentStats.map(s => new Date(s.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})).join(' • ')}
+                        </div>
+                        <div style="display: flex; justify-content: center; gap: 1.5rem; margin-top: 1rem; font-size: 0.85rem; flex-wrap: wrap;">
+                            <div><span style="display: inline-block; width: 12px; height: 12px; background: #8b5cf6; border-radius: 2px; margin-right: 0.5rem;"></span>Progressive Moves</div>
+                            <div><span style="display: inline-block; width: 12px; height: 12px; background: #ef4444; border-radius: 2px; margin-right: 0.5rem;"></span>Defensive Actions</div>
+                            <div><span style="display: inline-block; width: 12px; height: 12px; background: #f59e0b; border-radius: 2px; margin-right: 0.5rem;"></span>Chances Created</div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Add Evaluation Progress Charts
+            if (playerEvals.length > 0) {
+                html += `
+                    <h2 style="font-family: 'Bebas Neue', cursive; color: var(--primary); margin: 2rem 0 1rem; letter-spacing: 1px; font-size: 1.5rem;">📈 EVALUATION PROGRESS</h2>
+                `;
+
+                const categories = [
+                    {key: 'cognitive', name: 'Cognitive Structure', skills: ['perception', 'decision', 'anticipation', 'triangulation', 'passing-lines', 'space', 'focus']},
+                    {key: 'coordination', name: 'Coordination Structure', skills: ['passing', 'body', 'control', 'bilateral']},
+                    {key: 'socio', name: 'Socio-Affective Structure', skills: ['empathy', 'communication', 'solidarity', 'respect']},
+                    {key: 'emotional', name: 'Emotional-Volitional Structure', skills: ['desire', 'recovery', 'resilience', 'responsibility']},
+                    {key: 'creative', name: 'Creative-Expressive Structure', skills: ['deception', 'risk', 'originality']}
+                ];
+
+                categories.forEach(category => {
+                    const categoryAverages = playerEvals.map(eval => {
+                        const skillRatings = category.skills.map(skill => eval.ratings[`${category.key}-${skill}`] || 0).filter(r => r > 0);
+                        return skillRatings.length > 0 ? skillRatings.reduce((a, b) => a + b, 0) / skillRatings.length : 0;
+                    });
+
+                    html += `
+                        <div class="progress-chart">
+                            <h3>${category.name}</h3>
+                            <div class="chart-bars">
+                                ${categoryAverages.map((avg, idx) => {
+                                    const height = (avg / 4) * 100;
+                                    return `
+                                        <div class="chart-bar" style="height: ${height}%">
+                                            <span class="chart-bar-label">${avg.toFixed(1)}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                            <div class="chart-legend">
+                                ${playerEvals.map(e => new Date(e.date).toLocaleDateString('en-US', {month: 'short', day: 'numeric'})).join(' • ')}
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            container.innerHTML = html;
+        }
+
+        // Export functions
+        function exportAllData(format) {
+            const data = {
+                players: players,
+                evaluations: evaluations,
+                stats: stats,
+                exportDate: new Date().toISOString()
+            };
+
+            if (format === 'json') {
+                downloadJSON(data, 'fcc-elite-tracker-backup.json');
+            } else if (format === 'csv') {
+                exportAllCSV();
+            }
+        }
+
+        function exportAllCSV() {
+            let csv = 'PLAYERS\nID,Name,Position,Age Group,Date Added\n';
+            players.forEach(p => {
+                csv += `${p.id},"${p.name}",${p.position},"${p.age}",${p.dateAdded}\n`;
+            });
+
+            csv += '\n\nSTATS\nID,Player,Type,Date,Opponent,Goals,Assists,Minutes,Completed Pass,Missed Pass,Defensive Intervention,Progressive Move,Lost Possession,Chance Created,Notes\n';
+            stats.forEach(s => {
+                csv += `${s.id},"${s.playerName}",${s.type},${s.date},"${s.opponent || ''}",${s.goals},${s.assists},${s.minutes},${s.completedPass || 0},${s.missedPass || 0},${s.defensiveIntervention || 0},${s.progressiveMove || 0},${s.lostPossession || 0},${s.chanceCreated || 0},"${(s.notes || '').replace(/"/g, '""')}"\n`;
+            });
+
+            downloadCSV(csv, 'fcc-elite-tracker-all-data.csv');
+        }
+
+        function exportPlayerData(format) {
+            const playerId = parseInt(document.getElementById('export-player').value);
+            if (!playerId) {
+                alert('Please select a player');
+                return;
+            }
+
+            const player = players.find(p => p.id === playerId);
+            const playerEvals = evaluations.filter(e => e.playerId === playerId);
+            const playerStats = stats.filter(s => s.playerId === playerId);
+
+            const data = {
+                player: player,
+                evaluations: playerEvals,
+                stats: playerStats,
+                exportDate: new Date().toISOString()
+            };
+
+            if (format === 'json') {
+                downloadJSON(data, `${player.name}-data.json`);
+            } else if (format === 'csv') {
+                let csv = `PLAYER: ${player.name}\nPosition: ${player.position}\nAge Group: ${player.age}\n\n`;
+                csv += 'STATS\nType,Date,Opponent,Goals,Assists,Minutes,Completed Pass,Missed Pass,Defensive Intervention,Progressive Move,Lost Possession,Chance Created,Notes\n';
+                playerStats.forEach(s => {
+                    csv += `${s.type},${s.date},"${s.opponent || ''}",${s.goals},${s.assists},${s.minutes},${s.completedPass || 0},${s.missedPass || 0},${s.defensiveIntervention || 0},${s.progressiveMove || 0},${s.lostPossession || 0},${s.chanceCreated || 0},"${(s.notes || '').replace(/"/g, '""')}"\n`;
+                });
+                downloadCSV(csv, `${player.name}-stats.csv`);
+            }
+        }
+
+        function exportPlayerReport() {
+            const playerId = parseInt(document.getElementById('export-player').value);
+            if (!playerId) {
+                alert('Please select a player');
+                return;
+            }
+
+            const player = players.find(p => p.id === playerId);
+            const playerEvals = evaluations.filter(e => e.playerId === playerId);
+            const playerStats = stats.filter(s => s.playerId === playerId);
+
+            const totalGoals = playerStats.reduce((sum, s) => sum + s.goals, 0);
+            const totalAssists = playerStats.reduce((sum, s) => sum + s.assists, 0);
+            const totalMinutes = playerStats.reduce((sum, s) => sum + s.minutes, 0);
+            const gamesPlayed = playerStats.filter(s => s.type === 'game').length;
+
+            let report = `FCC ELITE PLAYER REPORT\n`;
+            report += `=========================\n\n`;
+            report += `Player: ${player.name}\n`;
+            report += `Position: ${player.position}\n`;
+            report += `Age Group: ${player.age}\n`;
+            report += `Report Date: ${new Date().toLocaleDateString()}\n\n`;
+
+            report += `CAREER STATISTICS\n`;
+            report += `-----------------\n`;
+            report += `Games Played: ${gamesPlayed}\n`;
+            report += `Total Goals: ${totalGoals}\n`;
+            report += `Total Assists: ${totalAssists}\n`;
+            report += `Total Minutes: ${totalMinutes}\n\n`;
+
+            if (playerEvals.length > 0) {
+                report += `EVALUATION SUMMARY\n`;
+                report += `------------------\n`;
+                const latestEval = playerEvals[playerEvals.length - 1];
+                report += `Latest Evaluation: ${new Date(latestEval.date).toLocaleDateString()}\n`;
+                report += `Total Evaluations: ${playerEvals.length}\n\n`;
+            }
+
+            downloadText(report, `${player.name}-report.txt`);
+        }
+
+        function importData() {
+            const file = document.getElementById('import-file').files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if (confirm('This will replace all current team data. Are you sure?')) {
+                        players = data.players || [];
+                        evaluations = data.evaluations || [];
+                        stats = data.stats || [];
+                        
+                        saveTeamData();
+                        
+                        if (isGDriveConnected) {
+                            saveToGoogleDrive();
+                        }
+                        
+                        renderPlayers();
+                        updatePlayerSelects();
+                        alert('✅ Data imported successfully!');
+                        document.getElementById('import-file').value = '';
+                    }
+                } catch (error) {
+                    alert('❌ Error importing data. Please check the file format.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function downloadJSON(data, filename) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            downloadBlob(blob, filename);
+        }
+
+        function downloadCSV(csv, filename) {
+            const blob = new Blob([csv], { type: 'text/csv' });
+            downloadBlob(blob, filename);
+        }
+
+        function downloadText(text, filename) {
+            const blob = new Blob([text], { type: 'text/plain' });
+            downloadBlob(blob, filename);
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize
+        initializeTeams();
+        renderPlayers();
+        updatePlayerSelects();
+        renderRecentStats();
+
+        // Set today's date for stats
+        document.getElementById('stats-date').value = new Date().toISOString().split('T')[0];
+    </script>
+</body>
+</html>
